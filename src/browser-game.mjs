@@ -31,40 +31,157 @@ export async function clickElement(cdp, selector) {
   await cdp.click(point.x, point.y);
 }
 
-export async function prepareGame(cdp, { url, level }) {
+export async function prepareGame(cdp, { url, level, pauseDuringDecision }) {
   await cdp.navigate(url);
   await cdp.waitFor("document.querySelector('#app')?.dataset.ready === 'true' && Boolean(document.querySelector('#test-panel')?.textContent)");
-  await installOverlay(cdp);
+  await installOverlay(cdp, pauseDuringDecision ? "DECISION PAUSE" : "REAL TIME");
   await clickElement(cdp, `button[data-level=${JSON.stringify(level)}]`);
   await sleep(80);
   await clickElement(cdp, "#start");
   await sleep(120);
 }
 
-export async function installOverlay(cdp) {
+export async function installOverlay(cdp, mode = "REAL TIME") {
   await cdp.evaluate(`(() => {
+    const telemetry = document.querySelector('#test-panel');
+    if (telemetry) telemetry.style.setProperty('display', 'none', 'important');
+
+    let style = document.querySelector('#jev-controller-overlay-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'jev-controller-overlay-style';
+      style.textContent = \`
+        #jev-controller-overlay {
+          --jev-accent: #e9b96e;
+          position: fixed;
+          left: 20px;
+          bottom: 20px;
+          z-index: 2147483646;
+          box-sizing: border-box;
+          width: 238px;
+          height: 126px;
+          overflow: hidden;
+          color: #f8f5e9;
+          background: linear-gradient(145deg, rgba(29, 67, 49, .97), rgba(20, 51, 38, .97));
+          border: 1px solid rgba(248, 245, 233, .16);
+          border-radius: 14px;
+          box-shadow: 0 14px 40px rgba(22, 48, 35, .22), inset 0 1px rgba(255, 255, 255, .08);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          pointer-events: none;
+          backdrop-filter: blur(12px);
+        }
+        #jev-controller-overlay[data-phase='thinking'] { --jev-accent: #f1c27a; }
+        #jev-controller-overlay[data-phase='return'],
+        #jev-controller-overlay[data-phase='serve'] { --jev-accent: #ef6a46; }
+        #jev-controller-overlay[data-phase='won'] { --jev-accent: #8ed6a8; }
+        #jev-controller-overlay[data-phase='lost'],
+        #jev-controller-overlay[data-phase='stopped'] { --jev-accent: #d8a18f; }
+        #jev-controller-overlay .jev-head {
+          box-sizing: border-box;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 0 13px;
+          border-bottom: 1px solid rgba(248, 245, 233, .1);
+        }
+        #jev-controller-overlay .jev-dot {
+          flex: 0 0 auto;
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--jev-accent);
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--jev-accent) 18%, transparent);
+        }
+        #jev-controller-overlay .jev-brand {
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+        }
+        #jev-controller-overlay .jev-mode {
+          margin-left: auto;
+          padding: 3px 6px;
+          color: rgba(248, 245, 233, .72);
+          background: rgba(248, 245, 233, .08);
+          border-radius: 999px;
+          font-size: 7px;
+          font-weight: 700;
+          letter-spacing: .9px;
+        }
+        #jev-controller-overlay .jev-body {
+          box-sizing: border-box;
+          height: 92px;
+          display: grid;
+          grid-template-rows: 27px 20px 19px;
+          align-content: center;
+          padding: 10px 13px 9px;
+        }
+        #jev-controller-overlay .jev-title,
+        #jev-controller-overlay .jev-detail,
+        #jev-controller-overlay .jev-meta {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        #jev-controller-overlay .jev-title {
+          color: var(--jev-accent);
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: -.15px;
+        }
+        #jev-controller-overlay .jev-detail {
+          color: #f8f5e9;
+          font-size: 10px;
+          font-weight: 700;
+        }
+        #jev-controller-overlay .jev-meta {
+          align-self: end;
+          color: rgba(248, 245, 233, .58);
+          font-size: 8px;
+          font-weight: 600;
+          letter-spacing: .15px;
+        }
+      \`;
+      document.head.appendChild(style);
+    }
+
     let overlay = document.querySelector('#jev-controller-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'jev-controller-overlay';
-      Object.assign(overlay.style, {
-        position: 'fixed', left: '20px', bottom: '20px', zIndex: '2147483646',
-        padding: '10px 13px', borderRadius: '9px', color: '#f7f6ec',
-        background: 'rgba(31, 66, 49, .92)', font: '600 12px/1.45 ui-monospace, monospace',
-        boxShadow: '0 8px 30px rgba(0,0,0,.16)', pointerEvents: 'none', whiteSpace: 'pre'
-      });
       document.body.appendChild(overlay);
     }
-    overlay.textContent = 'JEV · CONNECTED';
+    overlay.removeAttribute('style');
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.dataset.phase = 'ready';
+    overlay.innerHTML = \`
+      <div class="jev-head">
+        <span class="jev-dot"></span>
+        <span class="jev-brand">JEV PLAYER</span>
+        <span class="jev-mode"></span>
+      </div>
+      <div class="jev-body">
+        <div class="jev-title">CONNECTED</div>
+        <div class="jev-detail">Ready for the next match</div>
+        <div class="jev-meta">Waiting for game state</div>
+      </div>
+    \`;
+    overlay.querySelector('.jev-mode').textContent = ${JSON.stringify(mode)};
     return true;
   })()`);
 }
 
-export async function updateOverlay(cdp, lines) {
-  const text = lines.join("\n");
+export async function updateOverlay(cdp, view) {
   await cdp.evaluate(`(() => {
     const overlay = document.querySelector('#jev-controller-overlay');
-    if (overlay) overlay.textContent = ${JSON.stringify(text)};
+    if (!overlay) return false;
+    const view = ${JSON.stringify({ phase: "ready", title: "", detail: "", meta: "", ...view })};
+    overlay.dataset.phase = view.phase;
+    overlay.querySelector('.jev-title').textContent = view.title;
+    overlay.querySelector('.jev-detail').textContent = view.detail;
+    overlay.querySelector('.jev-meta').textContent = view.meta;
     return Boolean(overlay);
   })()`);
 }

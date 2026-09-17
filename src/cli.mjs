@@ -87,6 +87,10 @@ function probability(answer) {
   return answer.probabilities[answer.choice];
 }
 
+function actionLabel(choice) {
+  return choice.replaceAll("_", " ").toUpperCase();
+}
+
 async function run() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
@@ -158,11 +162,12 @@ async function run() {
           usage,
           cost_usd: costUsd,
         });
-        await updateOverlay(cdp, [
-          `JEV · MATCH ${winner === "jev" ? "WON" : "LOST"}`,
-          `${nextScore[0]}–${nextScore[1]} · ${decisionCount} decisions`,
-          `$${costUsd.toFixed(6)} API cost`,
-        ]);
+        await updateOverlay(cdp, {
+          phase: winner === "jev" ? "won" : "lost",
+          title: `MATCH ${winner === "jev" ? "WON" : "LOST"} · ${nextScore[0]}–${nextScore[1]}`,
+          detail: `${decisionCount} decisions · $${costUsd.toFixed(6)}`,
+          meta: `${model} · complete`,
+        });
         console.log(`Match ${winner === "jev" ? "won" : "lost"}: ${nextScore[0]}–${nextScore[1]}. Cost: $${costUsd.toFixed(6)}.`);
         return;
       }
@@ -170,14 +175,24 @@ async function run() {
       if (state === "ready" && frame.telemetry.server === 0 && !serveHandled) {
         serveHandled = true;
         const request = makeServeRequest(frame, history);
-        await updateOverlay(cdp, ["JEV · THINKING", "Choosing serve placement…"]);
+        await updateOverlay(cdp, {
+          phase: "thinking",
+          title: "CHOOSING SERVE",
+          detail: `Score ${score[0]}–${score[1]} · reading recent points`,
+          meta: `${model} · waiting for Jev`,
+        });
         const response = await typesafe.decide(request.state, request.questions);
         addUsage(usage, response.billing_usage);
         decisionCount += 1;
         const selected = response.answers.placement;
         pointer = resolveServeInput(frame, selected);
         recorder.write({ type: "decision", phase: "serve", request, response, cost_usd: calculateJevCost(response.billing_usage) });
-        await updateOverlay(cdp, ["JEV · SERVE", `${selected.choice} · ${(probability(selected) * 100).toFixed(0)}%`, `${response.model} · ${response.latency_ms} ms`]);
+        await updateOverlay(cdp, {
+          phase: "serve",
+          title: actionLabel(selected.choice),
+          detail: `Selection ${(probability(selected) * 100).toFixed(0)}%`,
+          meta: `${response.model} · ${response.latency_ms} ms`,
+        });
         console.log(`Jev serve: ${selected.choice} (${(probability(selected) * 100).toFixed(0)}%, ${response.latency_ms} ms)`);
         await cdp.click(pointer.x, pointer.y);
       } else if (state !== "ready") {
@@ -190,7 +205,12 @@ async function run() {
         await releaseMouse();
         if (options.pauseDuringDecision) await setPaused(cdp, true);
         const request = makeReturnRequest(frame, velocity, history);
-        await updateOverlay(cdp, ["JEV · THINKING", `Rally ${frame.telemetry.rally} · ball incoming…`]);
+        await updateOverlay(cdp, {
+          phase: "thinking",
+          title: "READING THE BALL",
+          detail: `Rally ${frame.telemetry.rally} · choosing return`,
+          meta: `${model} · waiting for Jev`,
+        });
 
         let response;
         try {
@@ -224,12 +244,12 @@ async function run() {
         recorder.write({ type: "decision", phase: "return", request, response, input: { power: input.power, executed }, cost_usd: calculateJevCost(response.billing_usage) });
         const placement = response.answers.placement;
         const power = response.answers.power;
-        await updateOverlay(cdp, [
-          "JEV · RETURN",
-          `${placement.choice} · ${(probability(placement) * 100).toFixed(0)}%`,
-          `${power.choice} · ${(probability(power) * 100).toFixed(0)}%`,
-          `${response.model} · ${response.latency_ms} ms`,
-        ]);
+        await updateOverlay(cdp, {
+          phase: "return",
+          title: actionLabel(placement.choice),
+          detail: `${actionLabel(power.choice)} ${(probability(power) * 100).toFixed(0)}% · choice ${(probability(placement) * 100).toFixed(0)}%`,
+          meta: `${response.model} · ${response.latency_ms} ms`,
+        });
         console.log(`Jev return: ${placement.choice} + ${power.choice} (${response.latency_ms} ms${executed ? "" : ", arrived too late"})`);
       }
 
@@ -254,7 +274,12 @@ async function run() {
       usage,
       cost_usd: calculateJevCost(usage),
     });
-    await updateOverlay(cdp, ["JEV · STOPPED", `Time limit · ${score[0]}–${score[1]}`]);
+    await updateOverlay(cdp, {
+      phase: "stopped",
+      title: "SESSION STOPPED",
+      detail: `Time limit · score ${score[0]}–${score[1]}`,
+      meta: model,
+    });
     throw new Error(`Time limit reached at ${score[0]}–${score[1]}.`);
   } finally {
     await releaseMouse().catch(() => {});
