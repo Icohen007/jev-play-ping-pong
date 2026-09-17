@@ -19,6 +19,11 @@ the unmodified game and moves the visible red racket through Chrome's input
 protocol. Each Jev request, probability distribution, selected action, score,
 and final result is saved under `artifacts/` as JSONL evidence.
 
+The default pause is deliberate: a ball crosses the table in roughly 0.85–0.94
+seconds, while an API response can consume a substantial part of that window.
+Use `--no-pause` to run a genuinely real-time match and measure whether the
+remaining movement time is sufficient.
+
 ## Run
 
 Requirements: Node.js 22+ and Google Chrome started with remote debugging:
@@ -41,6 +46,7 @@ Other useful options:
 
 ```sh
 npm run play -- --level pro --max-seconds 420
+npm run play -- --level club --no-pause --max-seconds 420
 npm run play -- --help
 ```
 
@@ -64,4 +70,8 @@ npm run check
 
 The code calls the documented `POST https://api.typesafe.ai/v1/systemone`
 endpoint with `jev-latest` by default. Credentials stay in memory and are never
-written to the evidence log.
+written to the evidence log. The runner records per-decision and total cost using
+the published Jev price of **$0.042 per million input tokens**; output tokens are
+free. Malformed successful responses are never repaired or executed: they are
+retried within a bounded attempt limit, and their reported usage is included in
+the cost.
