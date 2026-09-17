@@ -4,10 +4,20 @@
   "private": true,
   "type": "module",
   "description": "A dependency-free Jev controller for the RALLY browser table-tennis game.",
+  "license": "MIT",
+  "keywords": [
+    "typesafe-ai",
+    "jev",
+    "game-agent",
+    "browser-automation",
+    "computer-use"
+  ],
   "scripts": {
     "play": "node src/cli.mjs",
+    "record": "bash scripts/record-demo.sh",
+    "summarize": "node scripts/summarize-run.mjs",
     "test": "node --test",
-    "check": "node --check src/*.mjs test/*.mjs"
+    "check": "node --check src/*.mjs scripts/*.mjs test/*.mjs && bash -n scripts/record-demo.sh"
   },
   "engines": {
     "node": ">=22"

@@ -19,16 +19,14 @@ import {
 import { addUsage, calculateJevCost, JEV_PRICE_USD_PER_MILLION } from "./pricing.mjs";
 import { TypeSafeClient } from "./typesafe.mjs";
 
-const DEFAULT_ENV_FILE = "/Users/itamarc/Desktop/.env";
-
 function parseArgs(argv) {
   const options = {
     cdp: "http://127.0.0.1:9222",
-    envFile: DEFAULT_ENV_FILE,
+    envFile: null,
     level: "club",
     maxSeconds: 300,
     model: null,
-    pauseDuringDecision: true,
+    pauseDuringDecision: false,
     url: GAME_URL,
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -36,6 +34,10 @@ function parseArgs(argv) {
     if (name === "--help" || name === "-h") return { ...options, help: true };
     if (name === "--no-pause") {
       options.pauseDuringDecision = false;
+      continue;
+    }
+    if (name === "--pause") {
+      options.pauseDuringDecision = true;
       continue;
     }
     const value = argv[++index];
@@ -59,8 +61,9 @@ function printHelp() {
 Options:
   --level chill|club|pro   CPU difficulty (default: club)
   --max-seconds N         Wall-clock limit (default: 300)
-  --no-pause              Keep the game running during Jev API calls
-  --env-file PATH         Env file containing TYPESAFE_API_KEY
+  --pause                  Pause game physics during Jev API calls
+  --no-pause              Explicitly select the default real-time mode
+  --env-file PATH         Env file (default: .env or TYPESAFE_ENV_FILE)
   --model NAME            TypeSafe model (default: TYPESAFE_MODEL or jev-latest)
   --cdp URL               Chrome debugging endpoint (default: http://127.0.0.1:9222)
   --url URL               Game URL (default includes ?test=1)`);
@@ -98,12 +101,15 @@ async function run() {
     return;
   }
 
-  const envFile = readEnvFile(options.envFile);
+  const envPath = options.envFile || process.env.TYPESAFE_ENV_FILE || path.resolve(".env");
+  const envFile = fs.existsSync(envPath)
+    ? readEnvFile(envPath)
+    : { values: {}, permissionsTooOpen: false };
   const apiKey = process.env.TYPESAFE_API_KEY || envFile.values.TYPESAFE_API_KEY;
   const model = options.model || process.env.TYPESAFE_MODEL || envFile.values.TYPESAFE_MODEL || "jev-latest";
-  if (!apiKey) throw new Error("TYPESAFE_API_KEY is missing.");
+  if (!apiKey) throw new Error("TYPESAFE_API_KEY is missing. Export it or copy .env.example to .env.");
   if (envFile.permissionsTooOpen) {
-    console.warn(`Security note: ${options.envFile} is readable by other local users; consider chmod 600.`);
+    console.warn(`Security note: ${envPath} is readable by other local users; consider chmod 600.`);
   }
 
   const typesafe = new TypeSafeClient({ apiKey, model });

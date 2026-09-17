@@ -23,10 +23,12 @@ export function parseEnv(source) {
 }
 
 export function readEnvFile(path) {
-  const descriptor = fs.openSync(path, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  const noFollow = fs.constants.O_NOFOLLOW ?? 0;
+  const descriptor = fs.openSync(path, fs.constants.O_RDONLY | noFollow);
   try {
     const info = fs.fstatSync(descriptor);
-    if (!info.isFile() || info.uid !== process.getuid()) {
+    const currentUid = typeof process.getuid === "function" ? process.getuid() : null;
+    if (!info.isFile() || (currentUid !== null && info.uid !== currentUid)) {
       throw new Error("The env file must be a regular file owned by the current user.");
     }
     if (info.size > 65_536) {
@@ -35,7 +37,7 @@ export function readEnvFile(path) {
 
     return {
       values: parseEnv(fs.readFileSync(descriptor, "utf8")),
-      permissionsTooOpen: (info.mode & 0o077) !== 0,
+      permissionsTooOpen: process.platform !== "win32" && (info.mode & 0o077) !== 0,
     };
   } finally {
     fs.closeSync(descriptor);
