@@ -1,0 +1,15 @@
+{
+  "name": "jev-play-ping-pong",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A dependency-free Jev controller for the RALLY browser table-tennis game.",
+  "scripts": {
+    "play": "node src/cli.mjs",
+    "test": "node --test",
+    "check": "node --check src/*.mjs test/*.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
