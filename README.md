@@ -53,7 +53,14 @@ by the linked Mario and StarCraft examples.
 
 ## Quick start
 
-### 1. Requirements
+### 1. Clone
+
+```sh
+git clone https://github.com/Icohen007/jev-play-ping-pong.git
+cd jev-play-ping-pong
+```
+
+### 2. Requirements
 
 - Node.js 22 or newer
 - Google Chrome
@@ -61,7 +68,7 @@ by the linked Mario and StarCraft examples.
 
 There are no npm dependencies to install.
 
-### 2. Configure the API key
+### 3. Configure the API key
 
 ```sh
 cp .env.example .env
@@ -76,7 +83,7 @@ chmod 600 .env
 You may instead export `TYPESAFE_API_KEY`. `TYPESAFE_MODEL` is optional and
 defaults to `jev-latest`.
 
-### 3. Start Chrome with remote debugging
+### 4. Start Chrome with remote debugging
 
 macOS:
 
@@ -109,7 +116,7 @@ Keep that Chrome window open. The controller attaches to it, navigates the
 current page to RALLY, displays Jev's decisions in a fixed overlay, and leaves
 the browser open afterward.
 
-### 4. Play
+### 5. Play
 
 ```sh
 npm run play

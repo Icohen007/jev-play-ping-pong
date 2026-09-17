@@ -5,6 +5,14 @@
   "type": "module",
   "description": "A dependency-free Jev controller for the RALLY browser table-tennis game.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Icohen007/jev-play-ping-pong.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Icohen007/jev-play-ping-pong/issues"
+  },
+  "homepage": "https://github.com/Icohen007/jev-play-ping-pong#readme",
   "keywords": [
     "typesafe-ai",
     "jev",

@@ -46,7 +46,7 @@ Before publishing:
 > adapting the same pattern to another game or interactive task. You can clone
 > it—or point a coding agent at `AGENTS.md` and `docs/ADAPTING.md`.
 >
-> [repository URL]
+> https://github.com/Icohen007/jev-play-ping-pong
 
 Keep the video caption explicit that the observation adapter calculates a safe
 ball intercept while Jev chooses placement and power. The result is a verified
