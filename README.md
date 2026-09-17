@@ -170,6 +170,7 @@ share-ready H.264 MP4. Override the paths or 1440×900 capture size with
 - [Architecture and trust boundary](docs/ARCHITECTURE.md)
 - [Step-by-step adaptation guide and coding-agent prompt](docs/ADAPTING.md)
 - [Repository instructions for coding agents](AGENTS.md)
+- [GitHub launch checklist and LinkedIn draft](docs/LAUNCH.md)
 
 The core pieces are small on purpose:
 

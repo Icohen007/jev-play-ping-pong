@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { pathToFileURL } from "node:url";
 
 import { calculateJevCost } from "../src/pricing.mjs";
 
@@ -58,7 +59,7 @@ function main() {
   console.log(JSON.stringify({ file, ...summarize(records) }, null, 2));
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try {
     main();
   } catch (error) {

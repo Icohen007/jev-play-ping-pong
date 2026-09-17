@@ -1,0 +1,36 @@
+name: Adaptation report
+description: Share a new game/task adaptation or ask a focused implementation question
+title: "[Adaptation]: "
+labels:
+  - adaptation
+body:
+  - type: input
+    id: target
+    attributes:
+      label: Target game or task
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Observation surface
+      description: What authorized, player-visible state can the adapter read?
+    validations:
+      required: true
+  - type: textarea
+    id: actions
+    attributes:
+      label: Legal action set
+      description: Which bounded choices should Jev own, and how will normal inputs execute them?
+    validations:
+      required: true
+  - type: input
+    id: deadline
+    attributes:
+      label: Action deadline
+      description: How long is available between observation and execution?
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Success evidence
+      description: What observable terminal state will prove the result?

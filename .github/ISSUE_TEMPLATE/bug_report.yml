@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible controller, browser, or evidence problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Do not paste API keys, authorization headers, or unreviewed run logs.
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: The output of `git rev-parse --short HEAD`.
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Timing mode
+      options:
+        - Real-time (default)
+        - Decision-paused (--pause)
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include the expected behavior, actual behavior, and minimal reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node, Chrome, operating system, model returned by the API, and relevant latency.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety check
+      options:
+        - label: I reviewed this report and its attachments for secrets.
+          required: true
