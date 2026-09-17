@@ -4,7 +4,9 @@ A small, auditable example of [TypeSafe AI's Jev](https://typesafe.ai/) playing
 a live browser game. Jev reads structured table-tennis telemetry, chooses every
 serve and return, and moves the visible racket through ordinary Chrome input.
 
-![Jev completes an 11-0 real-time match](docs/media/jev-real-time-win.png)
+[![Jev completes an 11-0 real-time match](docs/media/jev-real-time-win.png)](https://github.com/Icohen007/jev-play-ping-pong/releases/download/v1.0.0/jev-rally-real-time-demo.mp4)
+
+▶️ [Watch the 21-second real-time demo](https://github.com/Icohen007/jev-play-ping-pong/releases/download/v1.0.0/jev-rally-real-time-demo.mp4)
 
 The interesting part is not table tennis. It is the reusable control boundary:
 deterministic code observes and executes; Jev makes narrow, typed decisions.
